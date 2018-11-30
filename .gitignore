@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+target
+code_gen_common.iml
+logs
+.idea
+/.classpath
+/.project
+/.settings/
+/.springBeans

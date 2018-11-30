@@ -1,7 +1,6 @@
 package org.alvin.code.gen.utils;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -135,83 +134,6 @@ public class SqlUtil {
 
 	private static String firstUpper(String name) {
 		return name.substring(0, 1).toUpperCase() + name.substring(1, name.length());
-	}
-
-	/**
-	 * 数据库加密用的key，临时这么放着，我在想用配置加密的办法
-	 *
-	 * @return
-	 */
-	public static final String mysqlKey = ".dl701.";
-
-	public static String mysql_aes_decrypt(String content) {
-		if(Strings.isNullOrEmpty(content)){
-			return null;
-		}
-		try {
-			return MysqlAES2JavaUtil.mysql_aes_decrypt(content, mysqlKey);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-
-	public static String mysql_aes_encrypt_sql(String content) {
-		if(Strings.isNullOrEmpty(content)){
-			return null;
-		}
-		try {
-			return "'" + MysqlAES2JavaUtil.mysql_aes_encrypt(content, mysqlKey) + "'";
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return "''";
-	}
-
-	public static String mysql_aes_encrypt_value(String content) {
-		if(Strings.isNullOrEmpty(content)){
-			return null;
-		}
-		try {
-			return MysqlAES2JavaUtil.mysql_aes_encrypt(content, mysqlKey);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-
-//	/**
-//	 * mysql 加密
-//	 *
-//	 * @return
-//	 */
-//	@Deprecated
-//	public static String getAES_ENCRYPT() {
-//		return "?";
-////		return " Hex(AES_ENCRYPT(?,'" + mysqlKey + "'))";
-//	}
-//
-//	public static String getAES_ENCRYPT(String param) {
-//		return " Hex(AES_ENCRYPT(" + param + ",'" + mysqlKey + "'))";
-//	}
-//
-//	/**
-//	 * mysql 解密
-//	 *
-//	 * @return
-//	 */
-//	public static String getAES_DECRYPT() {
-//		return getAES_DECRYPT("?");
-//	}
-//
-	/**
-	 * 查询解密
-	 *
-	 * @param param
-	 * @return
-	 */
-	public static String getAES_DECRYPT(String param) {
-		return " AES_DECRYPT(UNHEX(" + param + "),'" + mysqlKey + "')";
 	}
 
 }
