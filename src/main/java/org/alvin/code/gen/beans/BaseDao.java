@@ -2,6 +2,7 @@ package org.alvin.code.gen.beans;
 
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.alvin.code.gen.utils.Page;
 import org.apache.commons.logging.Log;
@@ -100,38 +101,32 @@ public abstract class BaseDao {
 	}
 
 	/**
-	 * 根据列来更新
+	 * 根据 id,列 来更新
 	 *
 	 * @param cols
 	 * @param vo
 	 * @param <T>
 	 * @return
 	 */
-	public <T> int update(List<String> cols, T vo) {
+	public <T> int update(List<String> cols, T vo, String tableName, String idName) {
+		if (cols == null || cols.isEmpty()) {
+			return 0;
+		}
 		StringBuilder sql = new StringBuilder();
-		sql.append("UPDATE admin_dept SET " + Joiner.on(",").join(cols));
-		sql.append(" WHERE dept_id=? ");
+		sql.append("UPDATE " + tableName + " SET " + Joiner.on(",").join(cols));
+		sql.append(" WHERE " + idName + "=? ");
 		//组装所有的更新字段
-		Object[] params = cols.stream().map(item -> {
-			try {
-				Field field = vo.getClass().getField(item);
-				return field.get(vo);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return null;
-		}).collect(Collectors.toList()).toArray();
-		return jdbcTemplate.update(sql.toString(), params);
+		return jdbcTemplate.update(sql.toString(), getParams(vo, cols));
 	}
 
 	/**
-	 * 更新非空字段
+	 * 更新非空字段(只针对ID)
 	 *
 	 * @param vo
 	 * @param <T>
 	 * @return
 	 */
-	public <T> int updateFieldNotNull(T vo) {
+	public <T> int updateFieldNotNull(T vo, String tableName, String idName) {
 		List<Field> fields = Lists.newArrayList(vo.getClass().getFields());
 		List<String> cols = fields.stream().filter(field ->
 				{
@@ -143,7 +138,64 @@ public abstract class BaseDao {
 					return false;
 				}
 		).map(Field::getName).collect(Collectors.toList());
-		return update(cols, vo);
+		return update(cols, vo, tableName, idName);
+	}
+
+	/**
+	 * 根据条件更新
+	 *
+	 * @param condition
+	 * @return
+	 */
+	public int updateAllByCondition(BaseCondition condition, String tableName, List<String> fields) {
+		if (Strings.isNullOrEmpty(condition.getCondition())) {
+			return 0;
+		}
+		if (condition.getCondition().trim().isEmpty()) {
+			return 0;
+		}
+		String cols = Joiner.on(" = ? ,").join(fields);
+		cols = cols.substring(0, cols.length() - 1); //去掉最后一个逗号
+		String sql = "UPDATE " + tableName + " SET " + cols + " WHERE " + condition.getCondition();
+		return jdbcTemplate.update(sql, condition.getArray());
+	}
+
+	/**
+	 * 根据条件删除
+	 *
+	 * @param condition
+	 * @param tableName
+	 * @return
+	 */
+	public int deleteByCondition(BaseCondition condition, String tableName) {
+		if (Strings.isNullOrEmpty(condition.getCondition())) {
+			return 0;
+		}
+		if (condition.getCondition().trim().isEmpty()) {
+			return 0;
+		}
+		String sql = "DELETE FROM " + tableName + " WHERE " + condition.getCondition();
+		return jdbcTemplate.update(sql, condition.getArray());
+	}
+
+	/**
+	 * 获取属性值
+	 *
+	 * @param vo
+	 * @param fields
+	 * @param <T>
+	 * @return
+	 */
+	private <T> Object[] getParams(T vo, List<String> fields) {
+		return fields.stream().map(item -> {
+			try {
+				Field field = vo.getClass().getField(item);
+				return field.get(vo);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}).collect(Collectors.toList()).toArray();
 	}
 
 	/**
